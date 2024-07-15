@@ -7,7 +7,7 @@ from io import StringIO
 import base64
 
 # Set page title
-st.set_page_config(page_title="EDA STUDIO",layout="wide", page_icon='images/exploration.png')
+st.set_page_config(page_title="EDA STUDIO",layout="wide", page_icon='images\exploration.png')
 # background video setup
 videohtml="""
     <style>
@@ -98,7 +98,7 @@ if uploaded_file is not None:
     col1, col2, col3 = st.columns(3)
     
     with col2:
-        st.image("images/pt.png", width=290)
+        st.image("images\pt.png", width=290)
         st.header("**Data Visualization**")
     
     # Select columns for visualization
@@ -139,7 +139,7 @@ if uploaded_file is not None:
     # Basic data analysis
     col1, col2, col3,col4,col5=st.columns(5)
     with col3:
-        st.image("images/chart.png", width=150)
+        st.image("images\chart.png", width=150)
     coll1, coll2, coll3=st.columns(3)
     with coll2:
         st.header("**Basic Data Analysis**")
@@ -164,37 +164,3 @@ if uploaded_file is not None:
 else:
     sf=st.info("Please upload a **CSV File** to begin the analysis.")
     
-# Add custom CSS for the buttons
-st.markdown("""
-<style>
-.social-btn {
-    display: inline-block;
-    padding: 10px 20px;
-    margin: 10px;
-    border-radius: 5px;
-    color: white;
-    font-weight: bold;
-    text-decoration: none;
-    transition: background-color 0.3s ease;
-}
-.linkedin-btn {
-    background-color: #0077B5;
-}
-.linkedin-btn:hover {
-    background-color: #00669c;
-}
-.instagram-btn {
-    background-color: #E4405F;
-}
-.instagram-btn:hover {
-    background-color: #d63050;
-}
-.github-btn {
-    background-color: #333;
-}
-.github-btn:hover {
-    background-color: #24292e;
-}
-</style>
-""", unsafe_allow_html=True)
-
