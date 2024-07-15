@@ -8,6 +8,7 @@ import base64
 
 # Set page title
 st.set_page_config(page_title="EDA STUDIO",layout="wide", page_icon='exploration.png')
+
 # background video setup
 videohtml="""
     <style>
@@ -37,7 +38,7 @@ with col3:
 
 coll1, coll2, coll3=st.columns(3)
 with coll2:
-    st.subheader("The Exploratory Data Analysis ",)
+    st.subheader("THE  EXPLORATORY  DATA  ANALYSIS",)
 # Background image setup
 # with open('images/sn.jpg', 'rb') as f:
 #     data = f.read()
