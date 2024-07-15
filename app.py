@@ -38,7 +38,7 @@ with col3:
 
 coll1, coll2, coll3=st.columns(3)
 with coll2:
-    st.subheader("THE  EXPLORATORY  DATA  ANALYSIS",)
+    st.subheader("EXPLORATORY  DATA  ANALYSIS",)
 # Background image setup
 # with open('images/sn.jpg', 'rb') as f:
 #     data = f.read()
