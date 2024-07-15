@@ -32,8 +32,8 @@ col1, col2, col3 ,col4,col5= st.columns(5)
 with col3:    
     st.title("EDA STUDIO")
 c1, c2, c3, c4,c5= st.columns(5)
-with col3:
-    st.image("images\exploration.png", width=260)
+# with col3:
+#     st.image("images\exploration.png", width=260)
 
 coll1, coll2, coll3=st.columns(3)
 with coll2:
@@ -98,7 +98,7 @@ if uploaded_file is not None:
     col1, col2, col3 = st.columns(3)
     
     with col2:
-        st.image("images\pt.png", width=290)
+        # st.image("images\pt.png", width=290)
         st.header("**Data Visualization**")
     
     # Select columns for visualization
