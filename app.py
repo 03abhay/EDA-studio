@@ -7,7 +7,7 @@ from io import StringIO
 import base64
 
 # Set page title
-st.set_page_config(page_title="EDA STUDIO",layout="wide", page_icon='images\exploration.png')
+st.set_page_config(page_title="EDA STUDIO",layout="wide", page_icon='exploration.png')
 # background video setup
 videohtml="""
     <style>
