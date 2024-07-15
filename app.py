@@ -20,7 +20,7 @@ videohtml="""
             }
             </style> 
     <video autoplay muted loop class="videoback" id="vid">
-    <source src='https://youtu.be/n2KH2GH7xt0?feature=shared'
+    <source src='https://cdn.discordapp.com/attachments/1261563929910317091/1262284584335315055/HD_Tech_Digital_Lines_Background.mp4?ex=669609a1&is=6694b821&hm=a61664a43df1ed5d0fa8faab4f06ac0a80c0a5388744f578c0e5dad50e7e56e0&'
     </video>
     
     """
