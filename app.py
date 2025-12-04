@@ -58,7 +58,7 @@ videohtml = """
     }
 </style> 
 <video autoplay muted loop class="videoback" id="vid">
-    <source src='https://cdn.discordapp.com/attachments/1261563929910317091/1262286261373108286/in-y2mate.com_-_Blue_and_Black_Clouds_Background_Loop_1080p.mp4?ex=66960b30&is=6694b9b0&hm=8f36b6fb85453f002a6746e36458d1f6e27b1116cf23d887e3e29f689a02a6be&'
+    <source src='https://discord.com/channels/1442425580787208243/1442425581332336733/1445991449358241865'
 </video>
 """
 
