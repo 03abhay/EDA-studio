@@ -5,183 +5,404 @@ import plotly.express as px
 import plotly.graph_objects as go
 from io import StringIO
 import base64
+import os
 
-# Set page config with dark theme
-st.set_page_config(page_title="EDA STUDIO", layout="wide", page_icon='exploration.png', initial_sidebar_state="expanded")
+# ================== PAGE CONFIG ==================
+st.set_page_config(
+    page_title="EDA STUDIO",
+    layout="wide",
+    page_icon="exploration.png",
+    initial_sidebar_state="expanded"
+)
 
-# Custom CSS for dark theme and white text
+# ================== LOAD LOCAL VIDEO (background.mp4) ==================
+def get_video_base64(path: str):
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode("utf-8")
+
+video_b64 = get_video_base64("background.mp4")
+
+
+# ================== GLOBAL DARK THEME CSS ==================
 custom_css = """
 <style>
     body {
-        color: white;
-        background-color: #0e1117;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        background-color: #000000;
     }
+
     .stApp {
-        background-color: #0e1117;
+        background-color: transparent;  /* let video show through */
     }
-    .stTextInput > div > div > input {
-        color: white;
+
+    /* Put main content into a dark card */
+    .block-container {
+        max-width: 1200px;
+        margin: 2rem auto 2rem auto;
+        background-color: rgba(15, 23, 42, 0.97); /* almost solid dark */
+        border-radius: 16px;
+        padding: 2rem 2.5rem;
+        box-shadow: 0 0 25px rgba(0, 0, 0, 0.75);
     }
-    .stSelectbox > div > div > select {
-        color: white;
+
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background-color: #020617;  /* very dark */
+        border-right: 1px solid #1f2937;
     }
-    .stMarkdown {
-        color: white;
+
+    [data-testid="stSidebar"] * {
+        color: #e5e7eb !important;
     }
-    .stText {
-        color: white;
-    }
-    .stTable {
-        color: white;
-    }
-    .stDataFrame {
-        color: white;
-    }
-    .plot-container {
-        background-color: #0e1117 !important;
+
+    .stMarkdown, .stText, .stTable, .stDataFrame {
+        color: #e5e7eb;
     }
 </style>
 """
-
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# Background video setup
-videohtml = """
-<style>
-    #vid {
+# ================== VIDEO BACKGROUND (IF FILE FOUND) ==================
+if video_b64 is not None:
+    video_html = f"""
+    <style>
+    .video-background {{
         position: fixed;
-        right: 0;
-        bottom: 0;
-        min-width: 100%; 
-        min-height: 50%;
-        opacity: 0.3;
-    }
-</style> 
-<video autoplay muted loop class="videoback" id="vid">
-    <source src='https://cdn.discordapp.com/attachments/1261563929910317091/1262286261373108286/in-y2mate.com_-_Blue_and_Black_Clouds_Background_Loop_1080p.mp4?ex=66960b30&is=6694b9b0&hm=8f36b6fb85453f002a6746e36458d1f6e27b1116cf23d887e3e29f689a02a6be&'
-</video>
-"""
+        top: 0;
+        left: 0;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        z-index: 0;
+        object-fit: cover;
+        opacity: 0.3;   /* adjust brightness of video */
+        pointer-events: none;
+    }}
+    </style>
 
-st.markdown(videohtml, unsafe_allow_html=True)
+    <video autoplay muted loop class="video-background">
+        <source src="data:video/mp4;base64,{video_b64}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    """
+    st.markdown(video_html, unsafe_allow_html=True)
+# If not found: silent, you just see a black static background.
 
+# ================== HEADER ==================
 col1, col2, col3, col4, col5 = st.columns(5)
-with col3:    
-    st.title("EDA STUDIO")
-c1, c2, c3, c4, c5 = st.columns(5)
 with col3:
+    st.title("EDA STUDIO")
+
+c1, c2, c3, c4, c5 = st.columns(5)
+with c3:
     st.image("exploration.png", width=260)
 
 coll1, coll2, coll3 = st.columns(3)
 with coll2:
     st.subheader("EXPLORATORY DATA ANALYSIS")
 
-# File uploader
-uploaded_file = st.file_uploader("**Upload Your Raw Dataset Here**", type="csv")
+st.markdown("---")
 
+# ================== SIDEBAR ==================
+st.sidebar.title("⚙️ Configuration")
+
+st.sidebar.markdown("**Welcome to EDA STUDIO** 👋")
+st.sidebar.write(
+    "Upload a CSV dataset to explore structure, summary statistics, "
+    "visualizations, and basic data quality insights."
+)
+
+uploaded_file = st.sidebar.file_uploader("📂 Upload CSV File", type="csv")
+
+if uploaded_file is None:
+    st.info("Please upload a **CSV file** from the sidebar to begin the analysis.")
+
+# ================== MAIN LOGIC ==================
 if uploaded_file is not None:
-    # Read the CSV file
-    df = pd.read_csv(uploaded_file)
-    
-    # Display basic information about the dataset
-    st.header("Dataset Information")
-    st.write(f"Number of rows: {df.shape[0]}")
-    st.write(f"Number of columns: {df.shape[1]}")
-    
-    # Display the first few rows of the dataset
-    st.subheader("First Few Rows")
-    st.write(df.head())
-    
-    # Display summary statistics
-    st.subheader("Summary Statistics")
-    st.write(df.describe())
-    
-    # Display column information
-    st.subheader("Column Information")
-    buffer = StringIO()
-    df.info(buf=buffer)
-    s = buffer.getvalue()
-    st.text(s)
+    # Read raw data
+    raw_df = pd.read_csv(uploaded_file)
+    df = raw_df.copy()
 
-    # Column mean
-    st.subheader("Column Mean calculation")
+    # ---------- Sidebar: Data Cleaning Options ----------
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🧹 Data Cleaning")
+
+    drop_duplicates = st.sidebar.checkbox("Drop duplicate rows", value=True)
+
+    missing_strategy = st.sidebar.selectbox(
+        "Handle missing values:",
+        [
+            "None (keep as is)",
+            "Drop rows with any missing values",
+            "Fill numeric NA with mean",
+            "Fill numeric NA with median",
+            "Fill all NA with 0"
+        ]
+    )
+
+    if drop_duplicates:
+        df = df.drop_duplicates()
+
+    # Handle missing values according to strategy
+    if missing_strategy != "None (keep as is)":
+        if missing_strategy == "Drop rows with any missing values":
+            df = df.dropna()
+        elif missing_strategy == "Fill numeric NA with mean":
+            num_cols = df.select_dtypes(include=[np.number]).columns
+            df[num_cols] = df[num_cols].fillna(df[num_cols].mean())
+        elif missing_strategy == "Fill numeric NA with median":
+            num_cols = df.select_dtypes(include=[np.number]).columns
+            df[num_cols] = df[num_cols].fillna(df[num_cols].median())
+        elif missing_strategy == "Fill all NA with 0":
+            df = df.fillna(0)
+
+    # Sidebar dataset summary
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📊 Dataset Summary")
+    st.sidebar.write(f"**Rows (raw):** {raw_df.shape[0]}")
+    st.sidebar.write(f"**Columns:** {raw_df.shape[1]}")
+    st.sidebar.write(f"**Rows (after cleaning):** {df.shape[0]}")
+
     numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
-    selected_column = st.selectbox("Select a column to calculate its mean:", numeric_columns)
+    categorical_columns = df.select_dtypes(include=["object"]).columns.tolist()
 
-    if selected_column:
-        # Calculate and display the mean
-        column_mean = df[selected_column].mean()
-        st.write(f"**The mean of '{selected_column}' is: {column_mean:.2f}**")
+    st.sidebar.markdown("---")
+    # Download cleaned dataset
+    csv_data = df.to_csv(index=False).encode("utf-8")
+    st.sidebar.download_button(
+        label="⬇️ Download Cleaned Dataset",
+        data=csv_data,
+        file_name="cleaned_dataset.csv",
+        mime="text/csv"
+    )
 
-    # Data Visualization
-    col1, col2, col3 = st.columns(3)
-    
-    with col2:
-        st.image("pt.png", width=290)
-        st.header("**Data Visualization**")
-    
-    # Select columns for visualization
-    numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
-    categorical_columns = df.select_dtypes(include=['object']).columns.tolist()
-    
-    # Histogram
-    st.subheader("Histogram")
-    hist_column = st.selectbox("Select a numeric column for histogram:", numeric_columns)
-    fig = px.histogram(df, x=hist_column, title=f"Histogram of {hist_column}")
-    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color='white')
-    st.plotly_chart(fig)
-    
-    # Scatter plot
-    st.subheader("Scatter Plot")
-    x_column = st.selectbox("Select X-axis:", numeric_columns)
-    y_column = st.selectbox("Select Y-axis:", [col for col in numeric_columns if col != x_column])
-    fig = px.scatter(df, x=x_column, y=y_column, title=f"Scatter Plot: {x_column} vs {y_column}", trendline="ols")
-    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color='white')
-    st.plotly_chart(fig)
-    
-    # Correlation heatmap
-    st.subheader("Correlation Heatmap")
-    corr_matrix = df[numeric_columns].corr()
-    fig = px.density_heatmap(corr_matrix, text_auto=True, title="Correlation Heatmap")
-    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color='white')
-    st.plotly_chart(fig)
-    
-    # Bar plot for categorical data
-    if categorical_columns:
-        st.subheader("Bar Plot")
-        cat_column = st.selectbox("Select a categorical column:", categorical_columns)
-        value_counts = df[cat_column].value_counts()
-        fig = px.bar(x=value_counts.index, y=value_counts.values, title=f"Bar Plot of {cat_column}")
-        fig.update_xaxes(title=cat_column)
-        fig.update_yaxes(title="Count")
-        fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color='white')
-        st.plotly_chart(fig)
-    
-    # Basic data analysis
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col3:
-        st.image("chart.png", width=150)
-    coll1, coll2, coll3 = st.columns(3)
-    with coll2:
-        st.header("**Basic Data Analysis**")
-    
-    # Check for missing values
-    st.subheader("Missing Values")
-    missing_values = df.isnull().sum()
-    fig = px.bar(x=missing_values.index, y=missing_values.values, title="Missing Values by Column")
-    fig.update_xaxes(title="Columns")
-    fig.update_yaxes(title="Number of Missing Values")
-    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color='white')
-    st.plotly_chart(fig)
-    
-    # Unique values in categorical columns
-    st.subheader("Unique Values in Categorical Columns")
-    for col in categorical_columns:
-        st.write(f"{col}: {df[col].nunique()} unique values")
-        value_counts = df[col].value_counts()
-        fig = px.pie(names=value_counts.index, values=value_counts.values, title=f"Distribution of {col}")
-        fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color='white')
-        st.plotly_chart(fig)
-        st.write("---")
+    # ================== TABS ==================
+    tab_overview, tab_viz, tab_quality = st.tabs(
+        ["📘 Overview", "📊 Visualizations", "🧪 Data Quality & Categorical Analysis"]
+    )
 
-else:
-    st.info("Please upload a **CSV File** to begin the analysis.")
+    # ---------- OVERVIEW TAB ----------
+    with tab_overview:
+        st.header("📘 Dataset Overview")
+
+        colA, colB = st.columns(2)
+        with colA:
+            st.subheader("Shape")
+            st.write(f"**Raw:** {raw_df.shape[0]} rows × {raw_df.shape[1]} columns")
+            st.write(f"**Cleaned:** {df.shape[0]} rows × {df.shape[1]} columns")
+
+            st.subheader("Column Types")
+            st.write(df.dtypes)
+
+        with colB:
+            st.subheader("Quick Stats (Numeric Columns)")
+            if len(numeric_columns) > 0:
+                st.dataframe(df[numeric_columns].describe().T)
+            else:
+                st.info("No numeric columns found in this dataset.")
+
+        st.markdown("---")
+
+        st.subheader("🔎 First Few Rows (Cleaned Data)")
+        st.dataframe(df.head())
+
+        # Column information
+        st.subheader("ℹ️ Detailed Column Info")
+        buffer = StringIO()
+        df.info(buf=buffer)
+        info_str = buffer.getvalue()
+        st.text(info_str)
+
+        # Column mean calculation
+        st.markdown("---")
+        st.subheader("📐 Column Mean Calculation (Cleaned Data)")
+        numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
+        if numeric_columns:
+            selected_column = st.selectbox(
+                "Select a numeric column:",
+                numeric_columns,
+                key="mean_column_select"
+            )
+            column_mean = df[selected_column].mean()
+            st.write(f"**The mean of '{selected_column}' is:** `{column_mean:.4f}`")
+        else:
+            st.info("No numeric columns available for mean calculation.")
+
+    # ---------- VISUALIZATIONS TAB ----------
+    with tab_viz:
+        st.header("📊 Data Visualization")
+
+        col1, col2, col3 = st.columns(3)
+        with col2:
+            st.image("pt.png", width=290)
+
+        numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
+        categorical_columns = df.select_dtypes(include=["object"]).columns.tolist()
+
+        # Histogram
+        st.subheader("📊 Histogram")
+        if numeric_columns:
+            hist_column = st.selectbox(
+                "Select a numeric column for histogram:",
+                numeric_columns,
+                key="hist_select"
+            )
+            fig = px.histogram(df, x=hist_column, title=f"Histogram of {hist_column}")
+            fig.update_layout(
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                font_color="#e5e7eb"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No numeric columns available for histogram.")
+
+        # Scatter plot
+        st.subheader("📈 Scatter Plot")
+        if len(numeric_columns) >= 2:
+            x_column = st.selectbox(
+                "Select X-axis:",
+                numeric_columns,
+                key="scatter_x_select"
+            )
+            y_options = [col for col in numeric_columns if col != x_column]
+            y_column = st.selectbox(
+                "Select Y-axis:",
+                y_options,
+                key="scatter_y_select"
+            )
+            fig = px.scatter(
+                df,
+                x=x_column,
+                y=y_column,
+                title=f"Scatter Plot: {x_column} vs {y_column}",
+                trendline="ols"
+            )
+            fig.update_layout(
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                font_color="#e5e7eb"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Need at least two numeric columns for a scatter plot.")
+
+        # Correlation heatmap
+        st.subheader("🔥 Correlation Heatmap")
+        if len(numeric_columns) >= 2:
+            corr_matrix = df[numeric_columns].corr()
+            fig = px.imshow(
+                corr_matrix,
+                text_auto=True,
+                title="Correlation Heatmap",
+                aspect="auto",
+                color_continuous_scale="Viridis"
+            )
+            fig.update_layout(
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                font_color="#e5e7eb"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Need at least two numeric columns for a correlation heatmap.")
+
+    # ---------- DATA QUALITY & CATEGORICAL ANALYSIS TAB ----------
+    with tab_quality:
+        st.header("🧪 Data Quality & Categorical Analysis")
+
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col3:
+            st.image("chart.png", width=150)
+
+        st.subheader("🕳 Missing Values (Cleaned Data View)")
+        missing_values = df.isnull().sum()
+        fig = px.bar(
+            x=missing_values.index,
+            y=missing_values.values,
+            title="Missing Values by Column"
+        )
+        fig.update_xaxes(title="Columns")
+        fig.update_yaxes(title="Number of Missing Values")
+        fig.update_layout(
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font_color="#e5e7eb"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.markdown("---")
+
+        # Unique values in categorical columns
+        st.subheader("🔤 Unique Values in Categorical Columns")
+        if categorical_columns:
+            for col in categorical_columns:
+                st.markdown(f"**{col}** – {df[col].nunique()} unique values")
+                value_counts = df[col].value_counts()
+                fig = px.pie(
+                    names=value_counts.index,
+                    values=value_counts.values,
+                    title=f"Distribution of {col}"
+                )
+                fig.update_layout(
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    font_color="#e5e7eb"
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                st.markdown("---")
+        else:
+            st.info("No categorical columns found for analysis.")
+
+# ================== FOOTER WITH LINKS ==================
+st.markdown("---")
+
+linkedin_url = "https://www.linkedin.com/in/your-linkedin-id/"
+github_url = "https://github.com/your-github-username"
+
+footer_html = f"""
+<style>
+.footer {{
+    text-align: center;
+    color: gray;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}}
+.footer a {{
+    color: #58a6ff;
+    text-decoration: none;
+}}
+.footer a:hover {{
+    text-decoration: underline;
+}}
+.github-btn {{
+    display: inline-block;
+    padding: 6px 14px;
+    margin-left: 8px;
+    border-radius: 999px;
+    border: 1px solid #58a6ff;
+    color: #58a6ff;
+    font-size: 0.85rem;
+    text-decoration: none;
+}}
+.github-btn:hover {{
+    background-color: #58a6ff22;
+}}
+</style>
+
+<div class="footer">
+    <p>Built with ❤️ using Streamlit | EDA STUDIO – Exploratory Data Analysis App</p>
+    <p>
+        <a href="https://www.linkedin.com/in/abhaysingh212003/" target="_blank">Connect on LinkedIn</a>
+        <a href="https://github.com/03abhay" target="_blank" class="github-btn">GitHub Profile</a>
+    </p>
+    <p>© 2025 EDA STUDIO by Abhay Singh. All rights reserved.</p>
+</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
