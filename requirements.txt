@@ -2,15 +2,7 @@ streamlit==1.32.0
 pandas==2.2.1
 numpy==1.26.4
 plotly==5.18.0
-
-# For heatmaps, scatter, and interactive charts
 statsmodels==0.14.1
-
-# To safely handle info buffer
+scipy==1.11.4
 pillow==10.2.0
-
-# Optional but useful
 matplotlib==3.8.2
-
-# If you want file encoding / video loading (standard lib)
-# base64 is built-in, so no need to install
